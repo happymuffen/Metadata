@@ -41,7 +41,34 @@ public class ShowMetadata extends AppCompatActivity {
         getSupportActionBar().setTitle(barcode.displayValue);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        
+    }
+    String getBarcodeType(Barcode barcode){
+        String value;
+        switch (barcode.valueFormat){
+            case Barcode.CALENDAR_EVENT: value="CalendarEvent";break;
+            case Barcode.CONTACT_INFO: value="ContactInfo";break;
+            case Barcode.DRIVER_LICENSE: value="DriverLicense";break;
+            case Barcode.EMAIL: value="Email";break;
+            case Barcode.GEO: value="Geo";break;
+            case Barcode.PHONE: value="Phone";break;
+            case Barcode.SMS: value="Sms";break;
+            case Barcode.URL: value="Url";break;
+            case Barcode.WIFI: value="Wifi";break;
+            default: value="Raw";
+        }
 
+        if (value.equals("Raw")){
+            boolean b=false;
+            for (int i=0;i<barcode.rawValue.length();++i){
+                b|=Character.isDigit(barcode.rawValue.charAt(i));
+            }
+            if (!b){
+                value="1d";
+            }
+        }
+
+        return value;
     }
 
     void findProduct(){
