@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
     // constants used to pass extra data in the intent
     public static final String AutoFocus = "AutoFocus";
     public static final String UseFlash = "UseFlash";
-    public static final String BarcodeObject = "Barcode";
 
     private CameraSource mCameraSource;
     private CameraSourcePreview mPreview;
@@ -82,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
         getSupportActionBar().setTitle(R.string.app_name);
 
         mPreview = findViewById(R.id.preview);
-        mGraphicOverlay = (GraphicOverlay<BarcodeGraphic>) findViewById(R.id.graphicOverlay);
+        mGraphicOverlay = findViewById(R.id.graphicOverlay);
 
         // read parameters from the intent used to launch the activity.
         boolean autoFocus = getIntent().getBooleanExtra(AutoFocus, false);

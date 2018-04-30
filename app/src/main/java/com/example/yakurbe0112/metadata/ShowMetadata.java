@@ -42,11 +42,6 @@ import static com.example.yakurbe0112.metadata.R.*;
 
 public class ShowMetadata extends AppCompatActivity {
     Barcode barcode;
-    private Handler connector= new Handler(Looper.getMainLooper());
-    private Handler looper=new Handler(Looper.getMainLooper());
-    private String html=new String();
-    private ArrayList<String> keywords=new ArrayList<String>() {
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +57,7 @@ public class ShowMetadata extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
-        get1dData("9780547928227");
+        get1dData(barcode.displayValue);
     }
     String getBarcodeType(Barcode barcode){
         String value;
@@ -111,7 +106,6 @@ public class ShowMetadata extends AppCompatActivity {
         URL urls[]=new URL[]{url1,url2,url3,url4};
         local basic= new local(urls);
         new Networkcalls().execute(basic);
-        return;
     }
 
 
@@ -140,7 +134,7 @@ public class ShowMetadata extends AppCompatActivity {
         //container for useful variables
         final URL[] urls;                   //the url list currently being searched
         int depth;                          //# of layers of recursive searching
-        final RelativeLayout UIID;          //location to add data to
+        final LinearLayout UIID;          //location to add data to
         String type;                        //additional tag for categorising thing being searched
         String goal="name";                 //type of data to be found
         String[] metavalues=new String[0];  //list of future goals
@@ -151,7 +145,7 @@ public class ShowMetadata extends AppCompatActivity {
             depth=0;
             UIID=findViewById(R.id.layout);
         }
-        local(URL[] urls,int depth, RelativeLayout UIID){
+        local(URL[] urls,int depth, LinearLayout UIID){
             this.urls=urls;
             this.depth=depth;
             this.UIID=UIID;
@@ -161,8 +155,7 @@ public class ShowMetadata extends AppCompatActivity {
     private static String parseData(String data, URL url, local context){
         //takes JSON string and source arrays and context of search to figure out what the relevant information is
         //then adds relevant metacontexts to context
-        int i=0;
-        JSONObject obj = null;
+        JSONObject obj;
         try {
             obj=new JSONObject(data);
         } catch (JSONException e) {//not actually json
@@ -218,14 +211,14 @@ public class ShowMetadata extends AppCompatActivity {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }finally {
+                    assert urlConnection != null;
                     urlConnection.disconnect();
                 }
                 finished[i]=parseData(readHtmlStream(urlConnection),url,context[0]);
                 ++i;
             }
-                postVar next= new postVar(context[0],collapseArray(finished));
 
-            return next;
+            return new postVar(context[0],collapseArray(finished));
         }
 
         @Override
@@ -233,7 +226,7 @@ public class ShowMetadata extends AppCompatActivity {
         protected void onPostExecute(postVar results){
             local context=results.context;
             String data=results.data;
-            RelativeLayout UIID=context.UIID;
+            LinearLayout UIID=context.UIID;
             TextView textView=new TextView(getApplicationContext());
             textView.setLayoutParams(
                     new ViewGroup.LayoutParams(
@@ -243,12 +236,5 @@ public class ShowMetadata extends AppCompatActivity {
             UIID.addView(textView);
             UIID.invalidate();
         }
-    }
-
-    void findBook(){
-
-    }
-    void findLocation(){
-
     }
 }
