@@ -22,11 +22,17 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <LinearLayout
-                android:id="@+id/ScrollLayout"
+            <RelativeLayout
+                android:id="@+id/layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/filler"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TextView" />
+            </RelativeLayout>
         </ScrollView>
 
     </android.support.design.widget.AppBarLayout>

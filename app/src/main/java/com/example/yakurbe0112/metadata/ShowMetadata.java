@@ -1,5 +1,6 @@
 package com.example.yakurbe0112.metadata;
 
+import android.graphics.drawable.DrawableContainer;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,7 +10,9 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
+import android.text.Layout;
 import android.view.View;
+import android.widget.RelativeLayout;
 
 import com.google.android.gms.vision.barcode.Barcode;
 
@@ -30,6 +33,8 @@ import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import static com.example.yakurbe0112.metadata.R.*;
+
 public class ShowMetadata extends AppCompatActivity {
     Barcode barcode;
     private Handler connector= new Handler(Looper.getMainLooper());
@@ -45,8 +50,8 @@ public class ShowMetadata extends AppCompatActivity {
         if(savedInstanceState != null){
             barcode= (Barcode) savedInstanceState.get("barcode");
         }
-        setContentView(R.layout.activity_show_metadata);
-        Toolbar toolbar =  findViewById(R.id.toolbar);
+        setContentView(layout.activity_show_metadata);
+        Toolbar toolbar =  findViewById(id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle(barcode.displayValue);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -84,6 +89,7 @@ public class ShowMetadata extends AppCompatActivity {
 
 
     void get1dData(String Raw) {
+        //0th layer lookup for unknown barcodes
         URL url0, url1, url2, url3, url4;
         url0=url1=url2=url3=url4=null;
         String dblookup="https://barcodesdatabase.org/wp-content/themes/bigdb/lib/barcodelookup/lib/scraper/barcodeLookupService.php?source=";
@@ -105,6 +111,7 @@ public class ShowMetadata extends AppCompatActivity {
 
 
     String readHtmlStream(HttpsURLConnection connection) {
+        //helper function to open connection and read response
         InputStream inputStream;
         String html="";
         try {
@@ -125,18 +132,21 @@ public class ShowMetadata extends AppCompatActivity {
     }
 
     class local{
-        final URL[] urls;
-        int depth;
-        final String UIID;
-        String type;
-        String goal="name";
+        //container for useful variables
+        final URL[] urls;                   //the url list currently being searched
+        int depth;                          //# of layers of recursive searching
+        final RelativeLayout UIID;          //location to add data to
+        String type;                        //additional tag for catagorizing thing being searched
+        String goal="name";                 //type of data to be found
+        String[] metavalues=new String[0];  //list of future goals
+        String[][] metalocations=null;      //list of locations to look for future goals in
 
         local(URL[] urls){
             this.urls=urls;
             depth=0;
-            UIID="ScrollLayout";
+            UIID=findViewById(R.id.layout);
         }
-        local(URL[] urls,int depth, String UIID){
+        local(URL[] urls,int depth, RelativeLayout UIID){
             this.urls=urls;
             this.depth=depth;
             this.UIID=UIID;
@@ -145,6 +155,7 @@ public class ShowMetadata extends AppCompatActivity {
 
     private static String parseData(String data, URL url, local context){
         //takes JSON string and source arrays and context of search to figure out what the relevant information is
+        //then adds relevant metacontexts to context
         int i=0;
         JSONObject obj = null;
         try {
@@ -170,6 +181,7 @@ public class ShowMetadata extends AppCompatActivity {
     }
 
     String collapseArray(String[] strings){
+        //helper function for simplifying multiple strings with similar information into one
         for(String string:strings){
             if (string!=null){
                 return string;
@@ -189,6 +201,7 @@ public class ShowMetadata extends AppCompatActivity {
 
     private class Networkcalls extends AsyncTask<local,Integer,postVar>{
         @Override
+        //handles network calls given a local context
         protected postVar doInBackground(local... context){
             URL[] urls=context[0].urls;
             HttpsURLConnection urlConnection= null;
@@ -211,8 +224,11 @@ public class ShowMetadata extends AppCompatActivity {
         }
 
         @Override
-
+        //adds results to page
         protected void onPostExecute(postVar results){
+            local context=results.context;
+            String data=results.data;
+            RelativeLayout UIID=context.UIID;
 
         }
     }
