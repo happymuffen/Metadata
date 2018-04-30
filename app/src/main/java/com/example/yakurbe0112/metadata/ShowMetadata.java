@@ -35,6 +35,22 @@ public class ShowMetadata extends AppCompatActivity {
     private ArrayList<String> keywords=new ArrayList<String>() {
     };
 
+    class local{
+        final URL[] urls;
+        final int depth;
+        final String UIID;
+
+        local(URL[] urls){
+            this.urls=urls;
+            depth=0;
+            UIID="ScrollLayout";
+        }
+        local(URL[] urls,int depth, String UIID){
+            this.urls=urls;
+            this.depth=depth;
+            this.UIID=UIID;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +111,9 @@ public class ShowMetadata extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        new Networkcalls().execute(url1, url2, url3, url4 );
+        URL urls[]=new URL[]{url1,url2,url3,url4};
+        local basic= new local(urls);
+        new Networkcalls().execute(basic);
         return;
     }
 
@@ -125,9 +143,10 @@ public class ShowMetadata extends AppCompatActivity {
         return html;
     }
 
-    private class Networkcalls extends AsyncTask<URL,Integer,String[]>{
+    private class Networkcalls extends AsyncTask<local,Integer,String[]>{
         @Override
-        protected String[] doInBackground(URL... urls){
+        protected String[] doInBackground(local... context){
+            URL[] urls=context[0].urls;
             HttpsURLConnection urlConnection= null;
             String[] finished= new String[urls.length];
             int i=0;
@@ -143,6 +162,12 @@ public class ShowMetadata extends AppCompatActivity {
                 ++i;
             }
             return finished;
+        }
+
+        @Override
+
+        protected void onPostExecute(String[] results){
+
         }
     }
 
