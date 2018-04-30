@@ -13,6 +13,9 @@ import android.view.View;
 
 import com.google.android.gms.vision.barcode.Barcode;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -34,23 +37,6 @@ public class ShowMetadata extends AppCompatActivity {
     private String html=new String();
     private ArrayList<String> keywords=new ArrayList<String>() {
     };
-
-    class local{
-        final URL[] urls;
-        final int depth;
-        final String UIID;
-
-        local(URL[] urls){
-            this.urls=urls;
-            depth=0;
-            UIID="ScrollLayout";
-        }
-        local(URL[] urls,int depth, String UIID){
-            this.urls=urls;
-            this.depth=depth;
-            this.UIID=UIID;
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,11 +103,6 @@ public class ShowMetadata extends AppCompatActivity {
         return;
     }
 
-    private String parseData(String data) {
-
-        return null;
-    }
-
 
     String readHtmlStream(HttpsURLConnection connection) {
         InputStream inputStream;
@@ -143,9 +124,72 @@ public class ShowMetadata extends AppCompatActivity {
         return html;
     }
 
-    private class Networkcalls extends AsyncTask<local,Integer,String[]>{
+    class local{
+        final URL[] urls;
+        int depth;
+        final String UIID;
+        String type;
+        String goal="name";
+
+        local(URL[] urls){
+            this.urls=urls;
+            depth=0;
+            UIID="ScrollLayout";
+        }
+        local(URL[] urls,int depth, String UIID){
+            this.urls=urls;
+            this.depth=depth;
+            this.UIID=UIID;
+        }
+    }
+
+    private static String parseData(String data, URL url, local context){
+        //takes JSON string and source arrays and context of search to figure out what the relevant information is
+        int i=0;
+        JSONObject obj = null;
+        try {
+            obj=new JSONObject(data);
+        } catch (JSONException e) {//not actually json
+            e.printStackTrace();
+            return null;
+        }
+        switch (url.getHost()){
+            case "barcodesdatabase.org":
+                try {
+                    String out=obj.getString(context.goal);
+                    if(obj.getString("source").matches("lookupbyisbn|isbndb")){
+                        context.type="book";
+                    }
+                    return out;
+                } catch (JSONException e) {
+                    return null;
+                }
+            default: break;
+        }
+        return null;
+    }
+
+    String collapseArray(String[] strings){
+        for(String string:strings){
+            if (string!=null){
+                return string;
+            }
+        }
+        return null;
+    }
+
+    class postVar{
+        local context;
+        String data;
+        postVar(local context, String data){
+            this.context=context;
+            this.data=data;
+        }
+    }
+
+    private class Networkcalls extends AsyncTask<local,Integer,postVar>{
         @Override
-        protected String[] doInBackground(local... context){
+        protected postVar doInBackground(local... context){
             URL[] urls=context[0].urls;
             HttpsURLConnection urlConnection= null;
             String[] finished= new String[urls.length];
@@ -158,15 +202,17 @@ public class ShowMetadata extends AppCompatActivity {
                 }finally {
                     urlConnection.disconnect();
                 }
-                finished[i]=parseData(readHtmlStream(urlConnection));
+                finished[i]=parseData(readHtmlStream(urlConnection),url,context[0]);
                 ++i;
             }
-            return finished;
+                postVar next= new postVar(context[0],collapseArray(finished));
+
+            return next;
         }
 
         @Override
 
-        protected void onPostExecute(String[] results){
+        protected void onPostExecute(postVar results){
 
         }
     }
