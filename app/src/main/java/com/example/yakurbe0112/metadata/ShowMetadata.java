@@ -16,6 +16,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -42,6 +43,7 @@ import static com.example.yakurbe0112.metadata.R.*;
 
 public class ShowMetadata extends AppCompatActivity {
     Barcode barcode;
+    int RECURSION_DEPTH=2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,21 +136,23 @@ public class ShowMetadata extends AppCompatActivity {
         //container for useful variables
         final URL[] urls;                   //the url list currently being searched
         int depth;                          //# of layers of recursive searching
-        final LinearLayout UIID;          //location to add data to
+        final LinearLayout UIID;            //location to add data to
         String type;                        //additional tag for categorising thing being searched
-        String goal="name";                 //type of data to be found
+        final String goal;                  //type of data to be found
         String[] metavalues=new String[0];  //list of future goals
-        String[][] metalocations=null;      //list of locations to look for future goals in
+        URL[][] metalocations=new URL[0][]; //list of locations to look for future goals in
 
         local(URL[] urls){
             this.urls=urls;
             depth=0;
             UIID=findViewById(R.id.layout);
+            goal="name";
         }
-        local(URL[] urls,int depth, LinearLayout UIID){
+        local(URL[] urls,int depth, LinearLayout UIID, String goal){
             this.urls=urls;
             this.depth=depth;
             this.UIID=UIID;
+            this.goal=goal;
         }
     }
 
@@ -221,6 +225,10 @@ public class ShowMetadata extends AppCompatActivity {
             return new postVar(context[0],collapseArray(finished));
         }
 
+        protected void onProgressUpdate(Integer...progress){
+            //spinner.setIndeterminate(true);
+        }
+
         @Override
         //adds results to page and spawns recursive network calls
         protected void onPostExecute(postVar results){
@@ -235,6 +243,17 @@ public class ShowMetadata extends AppCompatActivity {
             textView.setText(data);
             UIID.addView(textView);
             UIID.invalidate();
+
+            if(context.depth>RECURSION_DEPTH){return;}
+            LinearLayout newUUID=new LinearLayout(getApplicationContext());
+            UIID.addView(newUUID);
+            int i=0;
+            for(String metavalue:context.metavalues){
+                local newContext= new local(
+                        context.metalocations[i],context.depth+1,newUUID,metavalue);
+                new Networkcalls().execute(newContext);
+                ++i;
+            }
         }
     }
 }
