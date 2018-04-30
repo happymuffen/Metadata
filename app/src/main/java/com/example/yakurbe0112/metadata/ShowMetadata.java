@@ -1,5 +1,6 @@
 package com.example.yakurbe0112.metadata;
 
+import android.content.res.Resources;
 import android.graphics.drawable.DrawableContainer;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,8 +12,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.Layout;
+import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.vision.barcode.Barcode;
 
@@ -136,7 +141,7 @@ public class ShowMetadata extends AppCompatActivity {
         final URL[] urls;                   //the url list currently being searched
         int depth;                          //# of layers of recursive searching
         final RelativeLayout UIID;          //location to add data to
-        String type;                        //additional tag for catagorizing thing being searched
+        String type;                        //additional tag for categorising thing being searched
         String goal="name";                 //type of data to be found
         String[] metavalues=new String[0];  //list of future goals
         String[][] metalocations=null;      //list of locations to look for future goals in
@@ -224,12 +229,19 @@ public class ShowMetadata extends AppCompatActivity {
         }
 
         @Override
-        //adds results to page
+        //adds results to page and spawns recursive network calls
         protected void onPostExecute(postVar results){
             local context=results.context;
             String data=results.data;
             RelativeLayout UIID=context.UIID;
-
+            TextView textView=new TextView(getApplicationContext());
+            textView.setLayoutParams(
+                    new ViewGroup.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT));
+            textView.setText(data);
+            UIID.addView(textView);
+            UIID.invalidate();
         }
     }
 

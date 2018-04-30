@@ -322,8 +322,10 @@ public class MainActivity extends AppCompatActivity implements BarcodeGraphicTra
         if(getButton(item)!=null){return;}
         Button button=new Button(MainActivity.this);
         buttonMap.put(item.displayValue.hashCode(),button);
-        button.setLayoutParams(new ViewGroup.LayoutParams
-                (ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT));
+        button.setLayoutParams(
+                new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT));
         button.setText(item.displayValue);
         button.setOnClickListener(new View.OnClickListener() {
             @Override

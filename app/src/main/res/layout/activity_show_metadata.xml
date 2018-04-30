@@ -6,17 +6,24 @@
     android:layout_height="match_parent"
     tools:context="com.example.yakurbe0112.metadata.ShowMetadata">
 
-    <android.support.design.widget.AppBarLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:orientation="vertical">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:text="@string/filler"
+        <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
-            app:popupTheme="@style/AppTheme.PopupOverlay"
-            android:layout_height="wrap_content" />
+            android:layout_height="match_parent"
+            android:theme="@style/AppTheme.AppBarOverlay">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/filler"
+                app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+        </android.support.design.widget.AppBarLayout>
 
         <ScrollView
             android:layout_width="match_parent"
@@ -27,14 +34,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <TextView
-                    android:id="@+id/filler"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TextView" />
             </RelativeLayout>
         </ScrollView>
 
-    </android.support.design.widget.AppBarLayout>
+    </LinearLayout>
 
 </android.support.design.widget.CoordinatorLayout>
