@@ -44,6 +44,9 @@ import static com.example.yakurbe0112.metadata.R.*;
 public class ShowMetadata extends AppCompatActivity {
     Barcode barcode;
     int RECURSION_DEPTH=2;
+    String dblookup="https://barcodesdatabase.org/wp-content/themes/bigdb/lib/barcodelookup/lib/scraper/barcodeLookupService.php?source=";
+
+    String wikipediaAPI="https://en.wikipedia.org/w/api.php?action=query&prop=description|extracts&exintro=true&format=json&formatversion=2&titles=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +97,6 @@ public class ShowMetadata extends AppCompatActivity {
         //0th layer lookup for unknown barcodes
         URL url0, url1, url2, url3, url4;
         url0=url1=url2=url3=url4=null;
-        String dblookup="https://barcodesdatabase.org/wp-content/themes/bigdb/lib/barcodelookup/lib/scraper/barcodeLookupService.php?source=";
         try {
             //url0 = new URL("https://barcodesdatabase.org/barcode/".concat(Raw));
             url1 = new URL(dblookup.concat("isbndb&q=".concat(Raw)));
@@ -142,6 +144,8 @@ public class ShowMetadata extends AppCompatActivity {
         ArrayList<String> metavalues=new ArrayList<String>();  //list of future goals
         ArrayList<URL[]> metalocations=new ArrayList<URL[]>(); //list of locations to look for future goals in
         String data;
+        String source;
+        local[] newContexts;
 
         local(URL[] urls){
             this.urls=urls;
@@ -157,7 +161,7 @@ public class ShowMetadata extends AppCompatActivity {
         }
     }
 
-    private static String parseData(String data, URL url, local context){
+    private String parseData(String data, URL url, local context){
         //takes JSON string and source arrays and context of search to figure out what the relevant information is
         //then adds relevant metacontexts to context
         JSONObject obj;
@@ -169,8 +173,18 @@ public class ShowMetadata extends AppCompatActivity {
         }
 
         try {
-            if(obj.getString("source").matches("lookupbyisbn|isbndb")){
+            if(obj.getString("source").matches("lookupbyisbn|isbndb")){//its a book
+                //String auth="Author: ".concat(obj.getString("description"));
+                URL url1=new URL(wikipediaAPI.concat(obj.getString("description")));
 
+                LinearLayout newUUID=new LinearLayout(getApplicationContext());
+                local auth=new local(new URL[]{url1},context.depth+1,newUUID,"extract");
+
+
+                context.newContexts= new local[]{auth};
+                context.bonus= new String[]{
+                        "Author: ".concat(obj.getString("description"))
+                };
             }
 
             switch (url.getHost()){
@@ -181,7 +195,7 @@ public class ShowMetadata extends AppCompatActivity {
 
                 default: break;
             }
-        } catch (JSONException e) {
+        } catch (Exception e) {
         return null;
         }
         return null;
@@ -228,24 +242,24 @@ public class ShowMetadata extends AppCompatActivity {
             UIID.addView(textView);
             UIID.invalidate();
 
-            for(String bonus:context.bonus){
-                textView=new TextView(getApplicationContext());
-                textView.setLayoutParams(
-                        new ViewGroup.LayoutParams(
-                                LinearLayout.LayoutParams.MATCH_PARENT,
-                                LinearLayout.LayoutParams.WRAP_CONTENT));
-                textView.setText(bonus);
-                UIID.addView(textView);
-                UIID.invalidate();
-            }
-
             if(context.depth>RECURSION_DEPTH){return;}
-            LinearLayout newUUID=new LinearLayout(getApplicationContext());
-            UIID.addView(newUUID);
+
             int i=0;
-            for(String metavalue:context.metavalues){
-                local newContext= new local(
-                        context.metalocations.get(i),context.depth+1,newUUID,metavalue);
+            for(local newContext:context.newContexts){
+                LinearLayout newUUID= newContext.UIID;
+                UIID.addView(newUUID);
+
+                if(newContext.bonus[i]!=null){
+                    textView=new TextView(getApplicationContext());
+                    textView.setLayoutParams(
+                            new ViewGroup.LayoutParams(
+                                    LinearLayout.LayoutParams.MATCH_PARENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT));
+                    textView.setText(newContext.bonus[i]);
+                    newUUID.addView(textView);
+                    newUUID.invalidate();
+                }
+
                 new Networkcalls().execute(newContext);
                 ++i;
             }
