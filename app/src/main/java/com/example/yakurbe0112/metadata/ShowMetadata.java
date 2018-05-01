@@ -36,6 +36,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -46,7 +47,7 @@ public class ShowMetadata extends AppCompatActivity {
     int RECURSION_DEPTH=2;
     String dblookup="https://barcodesdatabase.org/wp-content/themes/bigdb/lib/barcodelookup/lib/scraper/barcodeLookupService.php?source=";
 
-    String wikipediaAPI="https://en.wikipedia.org/w/api.php?action=query&prop=description|extracts&exintro=true&format=json&formatversion=2&titles=";
+    String wikipediaAPI="https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=true&format=json&formatversion=2&titles=";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,9 +160,19 @@ public class ShowMetadata extends AppCompatActivity {
         }
     }
 
+//    public static String capEachWord(String source){
+//        String result = "";
+//        String[] splitString = source.split(" ");
+//        for(String target : splitString){
+//            result += Character.toUpperCase(target.charAt(0))
+//                    + target.substring(1) + " ";
+//        }
+//        return result.trim();
+//    }
+
     private String parseData(String data, URL url, local context){
         //takes JSON string and source arrays and context of search to figure out what the relevant information is
-        //then adds relevant metacontexts to context
+        //then adds relevant metacontexts to
         JSONObject obj;
         try {
             obj=new JSONObject(data);
@@ -173,13 +184,17 @@ public class ShowMetadata extends AppCompatActivity {
         try {
             if(obj.getString("source").matches("lookupbyisbn|isbndb")){//its a book
                 //String auth="Author: ".concat(obj.getString("description"));
-                URL url1=new URL(wikipediaAPI.concat(obj.getString("description")));
+                URL url1=new URL(wikipediaAPI.concat(obj.getString("description").toLowerCase()));
+                URL url2=new URL(wikipediaAPI.concat(obj.getString("name").toLowerCase()));
 
-                LinearLayout newUUID=new LinearLayout(getApplicationContext());
-                local auth=new local(new URL[]{url1},context.depth+1,newUUID,"extract");
+                LinearLayout UUID1=new LinearLayout(getApplicationContext());
+                local auth=new local(new URL[]{url1},context.depth+1,UUID1,"extract");
+                LinearLayout UUID2=new LinearLayout(getApplicationContext());
+                local desc=new local(new URL[]{url2},context.depth+1,UUID2,"extract");
 
 
-                context.newContexts= new local[]{auth};
+
+                context.newContexts= new local[]{desc,auth};
                 context.bonus= new String[]{
                         "Author: ".concat(obj.getString("description"))
                 };
@@ -230,6 +245,7 @@ public class ShowMetadata extends AppCompatActivity {
         //adds results to page and spawns recursive network calls
         protected void onPostExecute(local context){
             String data=context.data;
+
             LinearLayout UIID=context.UIID;
             TextView textView=new TextView(getApplicationContext());
             textView.setLayoutParams(
@@ -237,27 +253,32 @@ public class ShowMetadata extends AppCompatActivity {
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             LinearLayout.LayoutParams.WRAP_CONTENT));
             textView.setText(data);
+            if(data==null){
+                textView.setText("Data not found");
+                UIID.addView(textView);
+                UIID.invalidate();
+                return;}
             UIID.addView(textView);
             UIID.invalidate();
 
             if(context.depth>RECURSION_DEPTH){return;}
-            if(data==null){return;}
+
 
             int i=0;
             for(local newContext:context.newContexts){
                 LinearLayout newUUID= newContext.UIID;
                 UIID.addView(newUUID);
 
-                if(newContext.bonus[i]!=null){
-                    textView=new TextView(getApplicationContext());
-                    textView.setLayoutParams(
-                            new ViewGroup.LayoutParams(
-                                    LinearLayout.LayoutParams.MATCH_PARENT,
-                                    LinearLayout.LayoutParams.WRAP_CONTENT));
-                    textView.setText(newContext.bonus[i]);
-                    newUUID.addView(textView);
-                    newUUID.invalidate();
-                }
+//                if(newContext.bonus[i]!=null){
+//                    textView=new TextView(getApplicationContext());
+//                    textView.setLayoutParams(
+//                            new ViewGroup.LayoutParams(
+//                                    LinearLayout.LayoutParams.MATCH_PARENT,
+//                                    LinearLayout.LayoutParams.WRAP_CONTENT));
+//                    textView.setText(newContext.bonus[i]);
+//                    newUUID.addView(textView);
+//                    newUUID.invalidate();
+//                }
 
                 new Networkcalls().execute(newContext);
                 ++i;
