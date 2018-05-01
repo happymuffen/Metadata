@@ -139,13 +139,11 @@ public class ShowMetadata extends AppCompatActivity {
         final URL[] urls;                   //the url list currently being searched
         int depth;                          //# of layers of recursive searching
         final LinearLayout UIID;            //location to add data to
-        String[] bonus;                //additional array for bonus information found in query
+        String[] bonus=new String[1];       //additional array for bonus information found in query
         final String goal;                  //type of data to be found
-        ArrayList<String> metavalues=new ArrayList<String>();  //list of future goals
-        ArrayList<URL[]> metalocations=new ArrayList<URL[]>(); //list of locations to look for future goals in
-        String data;
-        String source;
-        local[] newContexts;
+        String data;                        //output
+        String source;                      //source of data
+        local[] newContexts;                //list of contexts to try next
 
         local(URL[] urls){
             this.urls=urls;
@@ -243,6 +241,7 @@ public class ShowMetadata extends AppCompatActivity {
             UIID.invalidate();
 
             if(context.depth>RECURSION_DEPTH){return;}
+            if(data==null){return;}
 
             int i=0;
             for(local newContext:context.newContexts){
