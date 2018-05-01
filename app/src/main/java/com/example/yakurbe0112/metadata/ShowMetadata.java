@@ -137,10 +137,11 @@ public class ShowMetadata extends AppCompatActivity {
         final URL[] urls;                   //the url list currently being searched
         int depth;                          //# of layers of recursive searching
         final LinearLayout UIID;            //location to add data to
-        String type;                        //additional tag for categorising thing being searched
+        String[] bonus;                //additional array for bonus information found in query
         final String goal;                  //type of data to be found
-        String[] metavalues=new String[0];  //list of future goals
-        URL[][] metalocations=new URL[0][]; //list of locations to look for future goals in
+        ArrayList<String> metavalues=new ArrayList<String>();  //list of future goals
+        ArrayList<URL[]> metalocations=new ArrayList<URL[]>(); //list of locations to look for future goals in
+        String data;
 
         local(URL[] urls){
             this.urls=urls;
@@ -166,49 +167,32 @@ public class ShowMetadata extends AppCompatActivity {
             e.printStackTrace();
             return null;
         }
-        switch (url.getHost()){
-            case "barcodesdatabase.org":
-                try {
-                    String out=obj.getString(context.goal);
-                    if(obj.getString("source").matches("lookupbyisbn|isbndb")){
-                        context.type="book";
-                    }
-                    return out;
-                } catch (JSONException e) {
-                    return null;
-                }
-            default: break;
-        }
-        return null;
-    }
 
-    String collapseArray(String[] strings){
-        //helper function for simplifying multiple strings with similar information into one
-        for(String string:strings){
-            if (string!=null){
-                return string;
+        try {
+            if(obj.getString("source").matches("lookupbyisbn|isbndb")){
+
             }
+
+            switch (url.getHost()){
+                case "barcodesdatabase.org":
+                    String out=obj.getString(context.goal);
+                    context.data=out;
+                    return out;
+
+                default: break;
+            }
+        } catch (JSONException e) {
+        return null;
         }
         return null;
     }
 
-    class postVar{
-        local context;
-        String data;
-        postVar(local context, String data){
-            this.context=context;
-            this.data=data;
-        }
-    }
-
-    private class Networkcalls extends AsyncTask<local,Integer,postVar>{
+    private class Networkcalls extends AsyncTask<local,Integer,local>{
         @Override
         //handles network calls given a local context
-        protected postVar doInBackground(local... context){
+        protected local doInBackground(local... context){
             URL[] urls=context[0].urls;
             HttpsURLConnection urlConnection= null;
-            String[] finished= new String[urls.length];
-            int i=0;
             for (URL url:urls) {
                 try {
                     urlConnection = (HttpsURLConnection) url.openConnection();
@@ -218,11 +202,12 @@ public class ShowMetadata extends AppCompatActivity {
                     assert urlConnection != null;
                     urlConnection.disconnect();
                 }
-                finished[i]=parseData(readHtmlStream(urlConnection),url,context[0]);
-                ++i;
+                if(parseData(readHtmlStream(urlConnection),url,context[0])!=null){
+                    break;
+                }
             }
 
-            return new postVar(context[0],collapseArray(finished));
+            return context[0];
         }
 
         protected void onProgressUpdate(Integer...progress){
@@ -231,9 +216,8 @@ public class ShowMetadata extends AppCompatActivity {
 
         @Override
         //adds results to page and spawns recursive network calls
-        protected void onPostExecute(postVar results){
-            local context=results.context;
-            String data=results.data;
+        protected void onPostExecute(local context){
+            String data=context.data;
             LinearLayout UIID=context.UIID;
             TextView textView=new TextView(getApplicationContext());
             textView.setLayoutParams(
@@ -244,13 +228,24 @@ public class ShowMetadata extends AppCompatActivity {
             UIID.addView(textView);
             UIID.invalidate();
 
+            for(String bonus:context.bonus){
+                textView=new TextView(getApplicationContext());
+                textView.setLayoutParams(
+                        new ViewGroup.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT));
+                textView.setText(bonus);
+                UIID.addView(textView);
+                UIID.invalidate();
+            }
+
             if(context.depth>RECURSION_DEPTH){return;}
             LinearLayout newUUID=new LinearLayout(getApplicationContext());
             UIID.addView(newUUID);
             int i=0;
             for(String metavalue:context.metavalues){
                 local newContext= new local(
-                        context.metalocations[i],context.depth+1,newUUID,metavalue);
+                        context.metalocations.get(i),context.depth+1,newUUID,metavalue);
                 new Networkcalls().execute(newContext);
                 ++i;
             }
