@@ -184,13 +184,14 @@ public class ShowMetadata extends AppCompatActivity {
         try {
             if(obj.getString("source").matches("lookupbyisbn|isbndb")){//its a book
                 //String auth="Author: ".concat(obj.getString("description"));
-                URL url1=new URL(wikipediaAPI.concat(obj.getString("description").toLowerCase()));
-                URL url2=new URL(wikipediaAPI.concat(obj.getString("name").toLowerCase()));
+                URL[] url1=UrlCases(wikipediaAPI,obj.getString("description").toLowerCase().split(",|;|:|<|>|(|)")[0]);
+                        //new URL(wikipediaAPI.concat(obj.getString("description").toLowerCase()));
+                URL[] url2=UrlCases(wikipediaAPI,obj.getString("name").toLowerCase());
 
                 LinearLayout UUID1=new LinearLayout(getApplicationContext());
-                local auth=new local(new URL[]{url1},context.depth+1,UUID1,"extract");
+                local auth=new local(url1,context.depth+1,UUID1,"extract");
                 LinearLayout UUID2=new LinearLayout(getApplicationContext());
-                local desc=new local(new URL[]{url2},context.depth+1,UUID2,"extract");
+                local desc=new local(url2,context.depth+1,UUID2,"extract");
 
 
 
@@ -199,6 +200,7 @@ public class ShowMetadata extends AppCompatActivity {
                         "Author: ".concat(obj.getString("description"))
                 };
             }
+
 
             switch (url.getHost()){
                 case "barcodesdatabase.org":
@@ -212,6 +214,32 @@ public class ShowMetadata extends AppCompatActivity {
         return null;
         }
         return null;
+    }
+
+    private URL[] UrlCases(String dest,String query) throws MalformedURLException {
+        String[] split=query.split(" ");
+        int size=(int)Math.pow(2,split.length);
+        String[] strings=new String[size];
+        int i,j=0;
+        for(i=0;i<size;++i) strings[i] = "";
+        i=0;
+        for(String substring:split){
+            for(j=0;j<size;++j){
+                String array=strings[j];
+                if((j&(int)Math.pow(2,i))==0){
+                    strings[j]=array.concat(substring.substring(0,1).toUpperCase()+substring.substring(1).concat(" "));
+                }else{
+                    strings[j]=array.concat(substring.concat(" "));
+                }
+            }
+            ++i;
+        }
+        j=0;
+        URL[]urls=new URL[size];
+        for(String url:strings){
+            urls[j++]=new URL(dest.concat(url));
+        }
+        return urls;
     }
 
     private class Networkcalls extends AsyncTask<local,Integer,local>{
